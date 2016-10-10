@@ -14,11 +14,11 @@
 
   <!--Version. Updates from the store only get triggered if there is a version change. -->
   <Version>1.0.0.0</Version>
-  <ProviderName>[Provider name]</ProviderName>
+  <ProviderName>Rolando Jimenez</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-  <DisplayName DefaultValue="RedditXL" />
-  <Description DefaultValue="RedditXL"/>
+  <DisplayName DefaultValue="Excelerator for Reddit" />
+  <Description DefaultValue="Easily import data from Reddit for powerful analysis in Excel"/>
 
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
   <IconUrl DefaultValue="~remoteAppUrl/Images/Button32x32.png" />
@@ -125,14 +125,14 @@
       </bt:Urls>
       <!-- ShortStrings max characters==125. -->
       <bt:ShortStrings>
-        <bt:String id="Contoso.TaskpaneButton.Label" DefaultValue="Show Taskpane" />
-        <bt:String id="Contoso.Group1Label" DefaultValue="Commands Group" />
+        <bt:String id="Contoso.TaskpaneButton.Label" DefaultValue="From Reddit" />
+        <bt:String id="Contoso.Group1Label" DefaultValue="Import" />
         <bt:String id="Contoso.GetStarted.Title" DefaultValue="Get started with your sample add-in!" />
       </bt:ShortStrings>
       <!-- LongStrings max characters==250. -->
       <bt:LongStrings>
         <bt:String id="Contoso.TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
-        <bt:String id="Contoso.GetStarted.Description" DefaultValue="Your sample add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started." />
+        <bt:String id="Contoso.GetStarted.Description" DefaultValue="Excelerator for Reddit loaded succesfully. Go to the Home tab and click the 'Get Data' button to get started." />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

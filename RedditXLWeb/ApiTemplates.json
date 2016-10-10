@@ -1,0 +1,31 @@
+﻿{
+  "templates": [
+    {
+      "api": "/about/moderators",
+      "headers": [ "Name", "Id", "Date", "Permissions" ],
+      "types": [ "string", "string", "epochDate", "string" ],
+      "props": [ "name", "id", "date", "mod_permissions"],
+      "rowsNode": "data.children",
+      "dataNode": "",
+      "next": "data.after"
+    },
+    {       
+      "api": "/hot",
+      "headers": ["Name", "Id", "Author", "Flair"],
+      "types": [ "string", "string", "string", "string"],
+      "props": [ "name", "id", "author", "author_flair_text" ],
+      "rowsNode": "data.children",
+      "dataNode": "data",
+      "next": "data.after"
+    },
+    {       
+      "api": "/api/flairlist",
+      "headers": ["User", "Text", "Css Class"],
+      "types": [ "string", "string", "string"],
+      "props": [ "user", "flair_text", "flair_css_class"],
+      "rowsNode": "users",
+      "dataNode": "",
+      "next": "next"
+    }
+  ]
+}
