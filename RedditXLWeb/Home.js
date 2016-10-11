@@ -64,11 +64,11 @@
             authenticator.endpoints.add("Reddit", {
                 baseUrl: 'https://www.reddit.com',
                 authorizeUrl: '/api/v1/authorize.compact',
-                resource: 'https://www.googleapis.com',
+                resource: 'https://www.reddit.com',
                 responseType: 'token',
                 clientId: "ChRoDF-hhrStSA",
                 state: "qwerty",
-                redirectUrl: "https://localhost:44300/Home.html",
+                redirectUrl: "https://excelerator.azurewebsites.net/Home.html",
                 scope: "identity read flair modflair"
             });
 

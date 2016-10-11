@@ -86,6 +86,7 @@
   <ItemGroup>
     <Content Include="packages.config" />
     <Content Include="ApiTemplates.json" />
+    <None Include="Properties\PublishProfiles\excelerator - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
