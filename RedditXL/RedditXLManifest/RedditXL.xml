@@ -127,12 +127,12 @@
       <bt:ShortStrings>
         <bt:String id="Contoso.TaskpaneButton.Label" DefaultValue="From Reddit" />
         <bt:String id="Contoso.Group1Label" DefaultValue="Import" />
-        <bt:String id="Contoso.GetStarted.Title" DefaultValue="Get started with your sample add-in!" />
+        <bt:String id="Contoso.GetStarted.Title" DefaultValue="Get started with Excelerator for Reddit" />
       </bt:ShortStrings>
       <!-- LongStrings max characters==250. -->
       <bt:LongStrings>
         <bt:String id="Contoso.TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
-        <bt:String id="Contoso.GetStarted.Description" DefaultValue="Excelerator for Reddit loaded succesfully. Go to the Home tab and click the 'Get Data' button to get started." />
+        <bt:String id="Contoso.GetStarted.Description" DefaultValue="You can now start importing data directly from Reddit" />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

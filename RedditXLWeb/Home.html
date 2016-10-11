@@ -9,7 +9,7 @@
     <script src="Scripts/office-js-helpers.js"></script>
 
     <script src="/Scripts/jquery-1.9.1.js" type="text/javascript"></script>
-    <script src="/Scripts/fabric.min.js"></script>
+    <script src="/Scripts/fabric.js"></script>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
 
     <!-- To enable offline debugging using a local reference to Office.js, use:                        -->
@@ -45,7 +45,7 @@
             </div>
 
             <div class="ms-Dropdown" tabindex="0">
-                <label class="ms-Label">Import the following data:</label>
+                <label class="ms-Label" style="font-weight:600">Data Source</label>
                 <i class="ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown"></i>
                 <select class="ms-Dropdown-select" id="api">
                     <option value="/api/flairlist" selected="selected">Flairs</option>
@@ -54,7 +54,12 @@
                     <option value="/new">New</option>
                 </select>
             </div>
- 
+
+            <div class="ms-TextField">
+                <label class="ms-Label">Max Rows</label>
+                <input id="maxRows" class="ms-TextField-field" type="text" placeholder="Enter the limit for number of total rows">
+            </div>
+
             <div class="ms-TextField" style="display:none">
                 <label class="ms-Label">Free form API</label>
                 <input id="freeFormApi" class="ms-TextField-field" type="text" placeholder="Enter the API path">
@@ -65,13 +70,19 @@
                 <input id="options" class="ms-TextField-field" type="text" placeholder="Enter query string parameters">
             </div>
 
-        
+            <div class="ms-Toggle" id="tableToggle">
+                <span class="ms-Toggle-description">Create Table</span>
+                <input type="checkbox" class="ms-Toggle-input" />
+                <label for="demo-toggle-3" class="ms-Toggle-field is-selected" id="tableCheck" tabindex="0">
+                    <span class="ms-Label ms-Label--on">Yes</span>
+                    <span class="ms-Label ms-Label--off">No</span>
+                </label>
+            </div>
+
 
             <br />
 
-
-
-            <button class="ms-Button ms-Button--primary" id="highlight-button">
+            <button class="ms-Button ms-Button--primary" id="getData">
                 <span class="ms-Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
                 <span class="ms-Button-label" id="button-text"></span>
                 <span class="ms-Button-description" id="button-desc"></span>
@@ -82,44 +93,23 @@
             </div>
             <label class="ms-Label" id="totalRows"></label>
 
+            <label class="ms-Label ms-fontSize-m" style="position:absolute; bottom:10px; left:15px" id="calloutAnchor"><i class="ms-Icon ms-Icon--mail" aria-hidden="true"></i>&nbsp;Status</label>
+            
+
         </div>
     </div>
 
 
-    <!-- FabricUI component used for displaying notifications -->
-    <div class="ms-MessageBanner" id="messageBanner">
-        <div class="ms-MessageBanner-content">
-            <div class="ms-MessageBanner-text">
-                <div class="ms-MessageBanner-clipper">
-
-                </div>
+    <div class="ms-MessageBar" style="display:none; position:absolute; bottom:50px; left:15px; right:15px; overflow-x:hidden; overflow-y:auto" id="messageBar">
+        <div class="ms-MessageBar-content">
+            <div class="ms-MessageBar-icon">
+                <i class="ms-Icon ms-Icon--info"></i>
             </div>
-            <button class="ms-MessageBanner-expand">
-                <i class="ms-Icon ms-Icon--ChevronDown"></i>
-            </button>
-            <div class="ms-MessageBanner-action">
-            </div>
-        </div>
-        <button class="ms-MessageBanner-close">
-            <i class="ms-Icon ms-Icon--Clear"></i>
-        </button>
-    </div>
-
-    <div class="ms-Callout is-hidden" id="msCallout">
-        <div class="ms-Callout-main">
-            <div class="ms-Callout-header">
-                <p class="ms-Callout-title" id="notificationHeader">Title</p>
-            </div>
-            <div class="ms-Callout-inner">
-                <div class="ms-Callout-content">
-                    <p class="ms-Callout-subText  ms-Callout-subText-- " id="notificationBody">Notification Body</p>
-                </div>
-                <div class="ms-Callout-actions">
-                </div>
+            <div class="ms-MessageBar-text" id="notificationBody">
+                Idle.
             </div>
         </div>
     </div>
-
 
 
     <script type="text/javascript">

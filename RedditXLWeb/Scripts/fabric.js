@@ -3791,7 +3791,7 @@ var fabric;
     var IS_DISABLED_CLASS = "is-disabled";
     var IS_SELECTED_CLASS = "is-selected";
     var ANIMATE_IN_CLASS = "animate-in";
-    var SMALL_MAX_WIDTH = 320; //479;
+    var SMALL_MAX_WIDTH = 319; //479;
     /**
      * Dropdown Plugin
      *

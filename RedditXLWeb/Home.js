@@ -4,14 +4,14 @@
     "use strict";
 
     var cellToHighlight;
-    var messageBanner;
-    var msCallout;
     var authenticator;
     var processedRows = 0;
-    var maxRows = 1000;
-    var processedRowsInCurrentBatch;
+    var maxRows = 20000;
+    var rowCount;
     var templates = [];
-    var batchSize = 200;
+    var rowsToAdd = [];
+    var batchSize = 1000;
+    var tableToggle;
 
 
     $.getJSON("ApiTemplates.json", function (json) {
@@ -24,11 +24,6 @@
 
         $(document).ready(function () {
             // Initialize the FabricUI notification mechanism and hide it
-
-            messageBanner = new fabric['MessageBanner'](document.querySelector('#messageBanner'));
-            $("#messageBanner").hide();
-
-            //msCallout = new fabric['Callout']($('#msCallout'));
 
             var DropdownHTMLElements = document.querySelectorAll('.ms-Dropdown');
             for (var i = 0; i < DropdownHTMLElements.length; ++i) {
@@ -43,6 +38,8 @@
                 new fabric['Spinner'](spinners[i]);
             }
             $("#spinner").hide();
+
+            tableToggle = new fabric['Toggle'](document.querySelector('#tableToggle'));
             /*
             var messageBanners = document.querySelectorAll('.ms-MessageBanner');
             for (var i = 0; i < messageBanners.length; i++) {
@@ -54,10 +51,26 @@
             $("#template-description").text("Enter the name of a reddit, the type of data you want and click import data to create a new table.");
             $('#button-text').text("Get Data!");
             $('#button-desc').text("Imports data from Reddit");
+            $('#maxRows').val(localStorage.getItem("maxRows") ? localStorage.getItem("maxRows"): maxRows);
             $('#subReddit').val(localStorage.getItem("subReddit"));
             // Add a click event handler for the highlight button.
-            $('#highlight-button').click(importData);
+            $('#getData').click(importData);
+            $('body').click(function () { $('#messageBar').hide(); });
+            $('#calloutAnchor').click(function (event) { $('#messageBar').toggle(); event.stopPropagation();});
+            $('#tableCheck').prop("checked", true);
 
+            authenticator = new OfficeJSHelpers.Authenticator();
+
+            authenticator.endpoints.add("Reddit", {
+                baseUrl: 'https://www.reddit.com',
+                authorizeUrl: '/api/v1/authorize.compact',
+                resource: 'https://www.googleapis.com',
+                responseType: 'token',
+                clientId: "ChRoDF-hhrStSA",
+                state: "qwerty",
+                redirectUrl: "https://localhost:44300/Home.html",
+                scope: "identity read flair modflair"
+            });
 
 
         });
@@ -65,38 +78,37 @@
 
     function importData() {
 
+        //Initialize state for a new import
         var subReddit = $("#subReddit").val();
         localStorage.setItem("subReddit", subReddit);
+
+        maxRows = $("#maxRows").val();
+        localStorage.setItem("maxRows", maxRows);
 
         var api = $("#api").val();
         var qs = $("#options").val();
 
-        authenticator = new OfficeJSHelpers.Authenticator();
+        $('#totalRows').text("");
+        $('#spinner').show();
 
-        authenticator.endpoints.add("Reddit", {
-            baseUrl: 'https://www.reddit.com',
-            authorizeUrl: '/api/v1/authorize.compact',
-            resource: 'https://www.googleapis.com',
-            responseType: 'token',
-            clientId: "ChRoDF-hhrStSA",
-            state: "qwerty",
-            redirectUrl: "https://localhost:44300/Home.html",
-            scope: "identity read flair modflair"
-        });
+        processedRows = 0;
+        rowsToAdd = [];
 
+        //Initiate REST call execution from the service to load the data in batches
         authenticator.authenticate("Reddit")
             .then(function (token) {
-                loadData(token, api, subReddit, qs, "", batchSize, null);
+                $('#notificationBody').text("Executing...");
+                loadBatchOfData(token, api, subReddit, qs, "", batchSize, null, "A1", "A1");
 
             }).catch(errorHandler);
     }
 
-    function loadData(token, api, subReddit, options, watermark, batchSize, template) {
+    function loadBatchOfData(token, api, subReddit, options, watermark, batchSize, template, startCellR1C1, initialCellR1C1) {
 
         var url = "https://oauth.reddit.com/r/" + subReddit + api;
         //url = "https://www.reddit.com/r/survivor/api/flairlist.json";
 
-        processedRowsInCurrentBatch = 0;
+        rowCount = 0;
         var baseUrl = url;
 
         url = baseUrl + "?limit=" + batchSize;
@@ -116,47 +128,87 @@
         }).then(function (response) {
             console.log(response);
 
-            if (template == null) { //First load data
-                processedRows = 0;
+            if (template == null) //Load the data formatting template corresponding to the API call
                 template = getTemplate(api, response);
-            }
 
             Excel.run(function (ctx) {
+
+                /*
+                var batchMode = false;
+                if (Office.context.requirements.isSetSupported('ExcelApi', 1.4)) {
+                    // If ExcelApi 1.4 is supported, then we can bulk add rows - first to an array, and then to the table.
+                    batchMode = true;
+                }
 
                 if (watermark == "") { //First batch, create the table
 
                     //Create the table
-                    var tableR1C1 = getTableR1C1(template.headers.length);
+                    var tableR1C1 = getTableR1C1("Sheet1", template.headers.length);
                     var table = ctx.workbook.tables.add(tableR1C1, true);
                     table.getHeaderRowRange().values = [template.headers];
                     table.name = "RedditTable";
-                    addRows(table, response, template);
+                    addRowsToTable(table, response, template, true);
+                    console.log("AddRows");
                     return ctx.sync();
 
-                } else { //subsequent batch, let's use existing table
+                } else { //subsequent batch
+                    /*
                     var table = ctx.workbook.tables.getItem("RedditTable");
                     return ctx.sync().then(function (data) {
-                        addRows(table, response, template);
+                        addRowsToTable(table, response, template, true);
                         table.getRange().getEntireColumn().format.autofitColumns();
                         table.getRange().getEntireRow().format.autofitRows();
+                        console.log("AddRows");
                         return ctx.sync();
                     });
+
                 }
+
+                */
+
+                var sheet = ctx.workbook.worksheets.getActiveWorksheet();
+                var r = addRowsAsRange(sheet, startCellR1C1, response, template);
+
+                console.log(r + "rows added");
+                return ctx.sync();
+
 
 
             }).then(function (data) { //Excel run then
-                processedRows += processedRowsInCurrentBatch;
+                processedRows += rowCount;
                 var nextBatchId = getNextBatchId(response, template);
 
                 if (nextBatchId && processedRows < maxRows) {
                     $('#spinner').show();
                     $('#rows').text(processedRows + " rows. Max is " + maxRows);
-                    loadData(token, api, subReddit, options, nextBatchId, batchSize, template);
+
+                    var newStartCellR1C1 = startCellR1C1.match(/\D+/) + (parseInt(startCellR1C1.match(/\d+/)) + batchSize);
+                    loadBatchOfData(token, api, subReddit, options, nextBatchId, batchSize, template, newStartCellR1C1, initialCellR1C1);
                 } else {
+                    $('#notificationBody').text("Idle.");
                     $('#spinner').hide();
                     $('#rows').text("");
                     $('#totalRows').text(processedRows + " total rows imported.");
+
+                    if ($('#tableCheck').hasClass("is-selected")) {
+                        Excel.run(function (ctx) {
+                            //TODO: Fix the R1C1 arithmetic to calculate the second value correctly, currently only works for insertions at A1
+                            var tableR1C1 = initialCellR1C1 + ":" + getColumnNameFromIndex(template.headers.length) + (parseInt(initialCellR1C1.match(/\d+/)) + processedRows - 1);
+                            var table = ctx.workbook.tables.add(tableR1C1, false);
+                            table.getHeaderRowRange().values = [template.headers];
+                            table.name = "RedditTable" + Math.random();
+                            table.getRange().getEntireColumn().format.autofitColumns();
+                            table.getRange().getEntireRow().format.autofitRows();
+                            return ctx.sync();
+                        }).catch(errorHandler);
+
+                    }
+
                 }
+
+
+
+
                 console.log(processedRows + " rows processed so far.");
             }).catch(errorHandler); //Excel run catch
         }).fail(errorHandler);
@@ -275,8 +327,9 @@
         return rows;
     }
 
-    function addRows(table, response, template) {
-        var tableBodyData = [];
+    function addRowsToTable(table, response, template, batchMode) {
+
+        rowsToAdd = [];
 
         var rows = getRowsNode(response, template); //TODO: Get rows according to template instead of hardcoded to .data.children
         rows.forEach(function (item) {
@@ -303,38 +356,90 @@
                 }
             }
 
-            if (Office.context.requirements.isSetSupported('ExcelApi', 1.3)) {
-                // If ExcelApi 1.2 is supported, then we can bulk add rows - first to an array, and then to the table.
-                tableBodyData.push(values);
-
+            if (batchMode) {
+                // In batch mode (ExcelApi 1.4 API must be supported), then we can bulk add rows - first to an array, and then to the table.
+                rowsToAdd.push(values);
             }
             else {
                 // Rows must be added to the table one at a time 
                 table.rows.add(null, [values]);
             }
-            processedRowsInCurrentBatch++;
+            rowCount++;
             $('#spinner').show();
-            $('#rows').text(processedRows + processedRowsInCurrentBatch + " rows. Max is " + maxRows);
+            $('#rows').text(processedRows + rowCount + " rows. Max is " + maxRows);
 
         });
-        if (Office.context.requirements.isSetSupported('ExcelApi', 1.3)) {
-            table.rows.add(null, tableBodyData);
+        if (batchMode) {
+            table.rows.add(null, rowsToAdd);
         }
     }
 
+    function addRowsAsRange(sheet, startCell, response, template) {
 
-    function getTableR1C1(columns) {
-        var r1c1 = "Sheet1!A1:";
-        if (columns <= 26) {
-            r1c1 = "Sheet1!A1:" + String.fromCharCode(64 + columns) + "1";
+        rowsToAdd = [];
+
+
+        var rows = getRowsNode(response, template);
+        rows.forEach(function (item) {
+
+            var values = [];
+            if (template.dataNode) item = item[template.dataNode];
+
+            for (var count = 0; count < template.headers.length; count++) {
+                var value = item[template.props[count]];
+                if (typeof value != "undefined") {
+                    switch (template.types[count]) {
+                        case "epochDate":
+                            values.push(epochSecsToDateString(value));
+                            break;
+                        case "number":
+                            values.push(value);
+                            break;
+                        default:
+                            values.push(JSON.stringify(value));
+                    }
+                } else {
+                    console.log("Item doesn't have property " + template.props[count]);
+                    values.push("undefined");
+                }
+            }
+
+            rowsToAdd.push(values);
+            rowCount++;
+
+            $('#spinner').show();
+            $('#rows').text(processedRows + rowCount + " rows. Max is " + maxRows);
+
+        });
+
+
+        var r1c1 = startCell + ":" + getColumnNameFromIndex(template.headers.length) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
+        var range = sheet.getRange(r1c1);
+        range.values = rowsToAdd;
+
+        return rowCount;
+
+    }
+
+    function getTableR1C1(sheetName, numColumns) {
+        var r1c1 = sheetName + "!A1:" + getColumnNameFromIndex(numColumns) + "1";
+        return r1c1;
+    }
+
+
+    function getColumnNameFromIndex(index) {
+        var columnName = "";
+        if (index <= 26) {
+            columnName = String.fromCharCode(64 + index);
         } else {
-            if (columns % 26 == 0) {
-                r1c1 = "Sheet1!A1:" + String.fromCharCode(63 + columns / 26) + "Z1";
+            if (index % 26 == 0) {
+                columnName = String.fromCharCode(63 + index / 26) + "Z";
             } else {
-                r1c1 = "Sheet1!A1:" + String.fromCharCode(64 + columns / 26) + String.fromCharCode(64 + columns % 26) + "1";
+                columnName = String.fromCharCode(64 + index / 26) + String.fromCharCode(64 + index % 26);
             }
         }
-        return r1c1;
+        return columnName;
+
     }
 
     function isEpochDate(number) {
@@ -370,6 +475,7 @@
             console.log("Debug info: " + JSON.stringify(error.debugInfo));
             errorMsg += "<br/>" + JSON.stringify(error.debugInfo);
         }
+        $('#totalRows').text(processedRows + " total rows imported.");
 
         showNotification("Error", errorMsg);
     }
@@ -378,10 +484,6 @@
     function showNotification(header, content) {
         $("#notificationHeader").text(header);
         $("#notificationBody").text(content);
-
-        //msCallout.show();
-
-        //messageBanner.showBanner();
-        //$("#messageBanner").show();
+        $("#messageBar").show();
     }
 })();
