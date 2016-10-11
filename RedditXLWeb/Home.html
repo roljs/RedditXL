@@ -35,7 +35,7 @@
     <div id="content-main">
         <div class="padding">
             <br />
-            <div class="ms-font-xl ms-fontColor-neutralTertiary">Getting Started</div>
+            <div class="ms-font-xl ms-fontColor-neutralTertiary">Import Your Data</div>
             <p class="ms-font-m-plus ms-fontColor-neutralTertiary" id="template-description"></p>
 
 
@@ -53,6 +53,11 @@
                     <option value="/hot">Hot</option>
                     <option value="/new">New</option>
                 </select>
+            </div>
+
+            <div class="ms-TextField">
+                <label class="ms-Label">Insert At (click a cell or type in)</label>
+                <input id="insertAt" class="ms-TextField-field" type="text" placeholder="Enter the R1C1 adress of a cell">
             </div>
 
             <div class="ms-TextField">
@@ -84,8 +89,8 @@
 
             <button class="ms-Button ms-Button--primary" id="getData">
                 <span class="ms-Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
-                <span class="ms-Button-label" id="button-text"></span>
-                <span class="ms-Button-description" id="button-desc"></span>
+                <span class="ms-Button-label" id="button-text">Get Data</span>
+                <span class="ms-Button-description" id="button-desc">Imports data from Reddit</span>
             </button>
             <br />
             <div class="ms-Spinner" id="spinner">

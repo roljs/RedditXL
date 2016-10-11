@@ -12,6 +12,7 @@
     var rowsToAdd = [];
     var batchSize = 1000;
     var tableToggle;
+    var insertAt = "A1";
 
 
     $.getJSON("ApiTemplates.json", function (json) {
@@ -48,11 +49,10 @@
             */
 
 
-            $("#template-description").text("Enter the name of a reddit, the type of data you want and click import data to create a new table.");
-            $('#button-text').text("Get Data!");
-            $('#button-desc').text("Imports data from Reddit");
+            $("#template-description").text("Specify how you want the data to be imported and click Get Data.");
             $('#maxRows').val(localStorage.getItem("maxRows") ? localStorage.getItem("maxRows"): maxRows);
             $('#subReddit').val(localStorage.getItem("subReddit"));
+            $('#insertAt').val("A1");
             // Add a click event handler for the highlight button.
             $('#getData').click(importData);
             $('body').click(function () { $('#messageBar').hide(); });
@@ -69,11 +69,26 @@
                 clientId: "ChRoDF-hhrStSA",
                 state: "qwerty",
                 redirectUrl: "https://excelerator.azurewebsites.net/Home.html",
+                //redirectUrl: "https://localhost:44300/Home.html",
                 scope: "identity read flair modflair"
             });
 
+            Office.context.document.addHandlerAsync(Office.EventType.DocumentSelectionChanged, handleSelectionChange);
 
         });
+    }
+
+    function handleSelectionChange(args) {
+
+        Excel.run(function (ctx) {
+            var selectedRange = ctx.workbook.getSelectedRange();
+            selectedRange.load('address');
+            return ctx.sync().then(function () {
+                $("#insertAt").val(selectedRange.address.split("!")[1].split(":")[0]);
+            });
+
+        });
+
     }
 
     function importData() {
@@ -87,6 +102,7 @@
 
         var api = $("#api").val();
         var qs = $("#options").val();
+        var insertAt = $('#insertAt').val();
 
         $('#totalRows').text("");
         $('#spinner').show();
@@ -98,7 +114,7 @@
         authenticator.authenticate("Reddit")
             .then(function (token) {
                 $('#notificationBody').text("Executing...");
-                loadBatchOfData(token, api, subReddit, qs, "", batchSize, null, "A1", "A1");
+                loadBatchOfData(token, api, subReddit, qs, "", batchSize, null, insertAt, insertAt);
 
             }).catch(errorHandler);
     }
@@ -192,8 +208,7 @@
 
                     if ($('#tableCheck').hasClass("is-selected")) {
                         Excel.run(function (ctx) {
-                            //TODO: Fix the R1C1 arithmetic to calculate the second value correctly, currently only works for insertions at A1
-                            var tableR1C1 = initialCellR1C1 + ":" + getColumnNameFromIndex(template.headers.length) + (parseInt(initialCellR1C1.match(/\d+/)) + processedRows - 1);
+                            var tableR1C1 = initialCellR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(initialCellR1C1.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(initialCellR1C1.match(/\d+/)) + processedRows - 1);
                             var table = ctx.workbook.tables.add(tableR1C1, false);
                             table.getHeaderRowRange().values = [template.headers];
                             table.name = "RedditTable" + Math.random();
@@ -413,7 +428,7 @@
         });
 
 
-        var r1c1 = startCell + ":" + getColumnNameFromIndex(template.headers.length) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
+        var r1c1 = startCell + ":" + getColumnNameFromIndex(getIndexFromColumnName(startCell.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
         var range = sheet.getRange(r1c1);
         range.values = rowsToAdd;
 
@@ -426,6 +441,16 @@
         return r1c1;
     }
 
+    function getIndexFromColumnName(columnName) {
+        var index = 0;
+        for (var i = 0; i< columnName.length; i++) {
+
+            index += (columnName.toUpperCase().charCodeAt(i) - 64) * Math.pow(26,i);
+        }
+
+        return index;
+
+    }
 
     function getColumnNameFromIndex(index) {
         var columnName = "";
