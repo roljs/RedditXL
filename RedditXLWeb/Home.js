@@ -75,6 +75,8 @@
 
             Office.context.document.addHandlerAsync(Office.EventType.DocumentSelectionChanged, handleSelectionChange);
 
+            ga("send", "event", "Actions", "Initialized");
+
         });
     }
 
@@ -109,6 +111,8 @@
 
         processedRows = 0;
         rowsToAdd = [];
+
+        ga("send", "event", "Actions", "Clicked Import Data");
 
         //Initiate REST call execution from the service to load the data in batches
         authenticator.authenticate("Reddit")
@@ -218,6 +222,8 @@
                         }).catch(errorHandler);
 
                     }
+
+                    ga("send", "event", "Actions", "Import Data Successful");
 
                 }
 
@@ -491,6 +497,7 @@
 
     // Helper function for treating errors
     function errorHandler(error) {
+        ga("send", "event", "Actions", "Error");
 
         $("#spinner").hide();
         // Always be sure to catch any accumulated errors that bubble up from the Excel.run execution
