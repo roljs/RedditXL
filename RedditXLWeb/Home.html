@@ -105,13 +105,18 @@
                 <span class="ms-Button-description" id="button-desc">Imports data from Reddit</span>
             </button>
             <br />
-            <div class="ms-Spinner" id="spinner">
-                <div id="rows" class="ms-Spinner-label"></div>
+            <!--
+                        <div style="position:absolute; bottom:10px; left:15px" class="ms-Spinner" id="spinner">
+                            <div class="ms-Spinner-label"></div>
+                        </div>
+            -->
+            <div style="position:absolute; bottom:10px; left:15px">
+                <div class="ms-Spinner" id="spinner">
+                    <div class="ms-Spinner-label"></div>
+                </div><span style="display:inline; float:right">
+                    <label class="ms-Label ms-fontSize-m" id="status">Ready</label>
+                </span>
             </div>
-            <label class="ms-Label" id="totalRows"></label>
-
-            <label class="ms-Label ms-fontSize-m" style="position:absolute; bottom:10px; left:15px" id="calloutAnchor"><i class="ms-Icon ms-Icon--mail" aria-hidden="true"></i>&nbsp;Status</label>
-
 
         </div>
     </div>
