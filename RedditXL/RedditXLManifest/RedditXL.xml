@@ -19,9 +19,9 @@
   <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
   <DisplayName DefaultValue="Excelerator for Reddit" />
   <Description DefaultValue="Easily import data from Reddit for powerful analysis in Excel"/>
-
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
   <IconUrl DefaultValue="~remoteAppUrl/Images/Button32x32.png" />
+  <SupportUrl DefaultValue="http://roljs.azurewebsites.net/office-add-ins/"></SupportUrl>
 
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
   <AppDomains>
@@ -36,6 +36,7 @@
   <DefaultSettings>
     <SourceLocation DefaultValue="~remoteAppUrl/Home.html" />
   </DefaultSettings>
+  
   <!-- End TaskPane Mode integration.  -->
 
   <Permissions>ReadWriteDocument</Permissions>
