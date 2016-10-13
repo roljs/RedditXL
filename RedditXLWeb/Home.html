@@ -47,17 +47,17 @@
     <div id="content-main">
         <div class="padding">
             <br />
-            <div class="ms-font-xl ms-fontColor-neutralTertiary">Import Your Data</div>
-            <p class="ms-font-m-plus ms-fontColor-neutralTertiary" id="template-description"></p>
+            <div class="ms-font-xl" style="color:#227447;">Import Your Data</div>
+            <p class="ms-font-m-plus" style="color:#227447;" id="template-description"></p>
 
 
             <div class="ms-TextField">
-                <label class="ms-Label">SubReddit</label>
+                <label class="ms-Label">Subreddit</label>
                 <input id="subReddit" class="ms-TextField-field" type="text" placeholder="Enter the name of a subreddit">
             </div>
 
             <div class="ms-Dropdown" tabindex="0">
-                <label class="ms-Label" style="font-weight:600">Data Source</label>
+                <label class="ms-Label" style="font-size:14px; font-weight:600">Data Source</label>
                 <i class="ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown"></i>
                 <select class="ms-Dropdown-select" id="api">
                     <option value="/api/flairlist" selected="selected">Flairs</option>
@@ -87,7 +87,7 @@
                 <input id="options" class="ms-TextField-field" type="text" placeholder="Enter query string parameters">
             </div>
 
-            <div class="ms-Toggle" id="tableToggle" >
+            <div class="ms-Toggle" id="tableToggle">
                 <span class="ms-Toggle-description">Create Table</span>
                 <input type="checkbox" class="ms-Toggle-input" />
                 <label for="demo-toggle-3" class="ms-Toggle-field is-selected" style="background-color:#227447; border-color:#227447" id="tableCheck" tabindex="0">
@@ -105,19 +105,18 @@
                 <span class="ms-Button-description" id="button-desc">Imports data from Reddit</span>
             </button>
             <br />
-            <!--
-                        <div style="position:absolute; bottom:10px; left:15px" class="ms-Spinner" id="spinner">
-                            <div class="ms-Spinner-label"></div>
-                        </div>
-            -->
-            <div style="position:absolute; bottom:10px; left:15px">
-                <div class="ms-Spinner" id="spinner">
-                    <div class="ms-Spinner-label"></div>
-                </div><span style="display:inline; float:right">
-                    <label class="ms-Label ms-fontSize-m" id="status">Ready</label>
-                </span>
-            </div>
+            <div class="ms-Overlay" id="overlay" style="background-color:hsla(0,0%,39%,.4);display:none">
+                <div style="position:absolute; bottom:15px; left:15px">
+                    <div style="float:left; padding-right:7px">
+                        <img src="Images/progress_circle.gif" style="width:20px; height:20px;" />
+                    </div>
 
+                    <label class="ms-Label ms-fontSize-sPlus" id="progress">Progress</label>
+                </div>
+            </div>
+            <div style="position:absolute; bottom:15px; left:15px">
+                <label class="ms-Label ms-fontSize-sPlus" id="status">Ready</label>
+            </div>
         </div>
     </div>
 
@@ -128,7 +127,7 @@
                 <i class="ms-Icon ms-Icon--info"></i>
             </div>
             <div class="ms-MessageBar-text" id="notificationBody">
-                Idle.
+                Nothing has been executed yet.
             </div>
         </div>
     </div>

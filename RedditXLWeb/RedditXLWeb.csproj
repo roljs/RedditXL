@@ -84,6 +84,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Images\progress_circle.gif" />
     <Content Include="packages.config" />
     <Content Include="ApiTemplates.json" />
     <None Include="Properties\PublishProfiles\excelerator - Web Deploy.pubxml" />

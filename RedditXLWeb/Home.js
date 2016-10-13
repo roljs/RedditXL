@@ -57,11 +57,9 @@
         for (var i = 0; i < TextFieldElements.length; i++) {
             new fabric['TextField'](TextFieldElements[i]);
         }
-        var spinners = document.querySelectorAll('.ms-Spinner');
-        for (var i = 0; i < spinners.length; i++) {
-            new fabric['Spinner'](spinners[i]);
-        }
-        $("#spinner").hide();
+
+
+        var Overlay = new fabric['Overlay'](document.querySelector('#overlay'));
 
         new fabric['Toggle'](document.querySelector('#tableToggle'));
 
@@ -112,7 +110,9 @@
         //Initiate REST call execution from the service to load the data in batches
         authenticator.authenticate("Reddit")
             .then(function (token) {
-                $('#spinner').show();
+                $('#overlay').show();
+                $('#progress').text("Connecting...");
+                $('#status').text("");
                 $('#notificationBody').text("Executing...");
                 loadBatchOfData(token, api, subReddit, qs, "", batchSize, null, insertAt, insertAt);
 
@@ -160,15 +160,16 @@
                 var nextBatchId = getNextBatchId(response, template);
 
                 if (nextBatchId && processedRows < maxRows) {
-                    $('#spinner').show();
-                    $('#status').text(processedRows + " rows...");
+                    $('#overlay').show();
+                    $('#progress').text(processedRows + " rows...");
+                    $('#status').text("");
 
                     var newStartCellR1C1 = startCellR1C1.match(/\D+/) + (parseInt(startCellR1C1.match(/\d+/)) + rowsAdded);
                     loadBatchOfData(token, api, subReddit, options, nextBatchId, batchSize, template, newStartCellR1C1, initialCellR1C1);
                 } else {
-                    $('#notificationBody').text("Idle.");
-                    $('#spinner').hide();
-                    $('#status').text(processedRows + " total rows imported.");
+                    $('#notificationBody').text("Last import was successful!");
+                    $('#overlay').hide();
+                    $('#status').text(processedRows + " total rows imported");
 
                     if ($('#tableCheck').hasClass("is-selected")) {
                         Excel.run(function (ctx) {
@@ -186,9 +187,6 @@
                     ga("send", "event", "Actions", "Import Data Successful");
 
                 }
-
-
-
 
                 console.log(processedRows + " rows processed so far.");
             }).catch(errorHandler); //Excel run catch
@@ -335,8 +333,17 @@
                         case "number":
                             values.push(value);
                             break;
+                        case "string":
+                            values.push(value);
+                            break;
+                        case "undefined":
+                            values.push("");
+                            break;
                         default:
-                            values.push(JSON.stringify(value));
+                            if (value == null)
+                                values.push("");
+                            else
+                                values.push(JSON.stringify(value));
                     }
                 } else {
                     console.log("Item doesn't have property " + template.props[count]);
@@ -346,7 +353,7 @@
 
             rowsToAdd.push(values);
 
-            $('#status').text(processedRows + rowCount + " rows...");
+            //$('#progress').text(processedRows + rowCount + " rows...");
 
 
         }
@@ -438,8 +445,8 @@
     // Helper function for displaying notifications
     function showNotification(header, content) {
         ga("send", "event", "Actions", header);
-        $("#spinner").hide();
-        $('#status').text(processedRows + " total rows imported.");
+        $("#overlay").hide();
+        $('#status').text(processedRows + " total rows imported");
         console.log("Error: " + content);
 
         $("#notificationBody").html("<h2>" + header + "</h2>" + content);

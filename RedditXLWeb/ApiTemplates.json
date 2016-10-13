@@ -20,7 +20,7 @@
     },
     {
       "api": "/api/flairlist",
-      "headers": [ "User", "Text", "Css Class" ],
+      "headers": [ "Username", "Flair Text", "CSS Class" ],
       "types": [ "string", "string", "string" ],
       "props": [ "user", "flair_text", "flair_css_class" ],
       "rowsNode": "users",
