@@ -85,8 +85,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\progress_circle.gif" />
+    <Content Include="Images\RedditXL Logo 2.png" />
+    <Content Include="Images\RedditXL Logo.png" />
     <Content Include="packages.config" />
     <Content Include="ApiTemplates.json" />
+    <Content Include="Images\RedditXL Logo.cdr" />
+    <Content Include="Images\RedditXL Logo 2.cdr" />
     <None Include="Properties\PublishProfiles\excelerator - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\excelerator.pubxml" />
     <None Include="Web.Debug.config">
