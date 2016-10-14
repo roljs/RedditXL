@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <title>Excelerator for Reddit</title>
+    <title>Flair Analysis for Reddit</title>
     <script>
         (function (i, s, o, g, r, a, m) {
             i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
@@ -24,10 +24,6 @@
     <script src="/Scripts/fabric.js"></script>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
 
-    <!-- To enable offline debugging using a local reference to Office.js, use:                        -->
-    <!-- <script src="/Scripts/Office/MicrosoftAjax.js" type="text/javascript"></script>  -->
-    <!-- <script src="/Scripts/Office/1.1/office.js" type="text/javascript"></script>  -->
-
     <link href="Home.css" rel="stylesheet" type="text/css" />
     <script src="Home.js" type="text/javascript"></script>
 
@@ -35,76 +31,135 @@
     <!--
     <link rel="stylesheet" href="https://appsforoffice.microsoft.com/fabric/2.6.1/fabric.min.css">
     <link rel="stylesheet" href="https://appsforoffice.microsoft.com/fabric/2.6.1/fabric.components.min.css">
-    -->
+
     <link rel="stylesheet" href="https://appsforoffice.microsoft.com/fabric/fabric-core/4.0.0/fabric.min.css">
     <link rel="stylesheet" href="https://appsforoffice.microsoft.com/fabric/fabric-js/1.0.0/fabric.components.min.css">
+    -->
 
-    <!-- To enable the offline use of Office UI Fabric, use: -->
-    <!-- link rel="stylesheet" href="/Content/fabric.min.css" -->
-    <!-- link rel="stylesheet" href="/Content/fabric.components.min.css" -->
+    <link href="Content/fabric.css" rel="stylesheet" />
+    <link href="Content/fabric.components.css" rel="stylesheet" />
+
 </head>
 <body>
+
     <div id="content-main">
-        <div class="padding">
-            <br />
-            <div class="ms-font-xl" style="color:#227447;">Import Your Data</div>
-            <p class="ms-font-m-plus" style="color:#227447;" id="template-description"></p>
+
+        <div class="pivotPadding">
+            <div class="ms-Pivot ">
+                <ul class="ms-Pivot-links">
+                    <li class="ms-Pivot-link is-selected" data-content="home" title="Home" tabindex="1">
+                        Home
+                    </li>
+                    <li class="ms-Pivot-link " data-content="about" title="About" tabindex="1">
+                        About
+                    </li>
+                    <li class="ms-Pivot-link" tabindex="1">
+                        <i class="ms-Pivot-ellipsis ms-Icon ms-Icon--More"></i>
+                    </li>
+                </ul>
+                <div class="ms-Pivot-content" data-content="home">
+                    <div class="panePadding">
+
+                        <div class="ms-font-l" style="color:#227447;">Import Your Data</div>
+                        <p class="ms-font-m" style="color:#227447;" id="template-description"></p>
 
 
-            <div class="ms-TextField">
-                <label class="ms-Label">Subreddit</label>
-                <input id="subReddit" class="ms-TextField-field" type="text" placeholder="Enter the name of a subreddit">
+                        <div class="ms-TextField">
+                            <label class="ms-Label">Subreddit</label>
+                            <input id="subReddit" class="ms-TextField-field" type="text" placeholder="Enter the name of a subreddit">
+                        </div>
+
+                        <div class="ms-Dropdown" tabindex="0" style="display:none">
+                            <label class="ms-Label" style="font-size:14px; font-weight:600">Data Source</label>
+                            <i class="ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown"></i>
+                            <select class="ms-Dropdown-select" id="api">
+                                <option value="/api/flairlist" selected="selected">Flairs</option>
+                                <option value="/about/moderators">Moderators</option>
+                                <option value="/hot">Hot</option>
+                                <option value="/new">New</option>
+                            </select>
+                        </div>
+
+                        <div class="ms-TextField">
+                            <label class="ms-Label">Insert At (click a cell or type in)</label>
+                            <input id="insertAt" class="ms-TextField-field" type="text" placeholder="Enter the R1C1 adress of a cell">
+                        </div>
+
+                        <div class="ms-TextField">
+                            <label class="ms-Label">Max Rows</label>
+                            <input id="maxRows" class="ms-TextField-field" type="text" placeholder="Enter the limit for number of total rows">
+                        </div>
+
+                        <div class="ms-TextField" style="display:none">
+                            <label class="ms-Label">Free form API</label>
+                            <input id="freeFormApi" class="ms-TextField-field" type="text" placeholder="Enter the API path">
+                        </div>
+
+                        <div class="ms-TextField" style="display:none">
+                            <label class="ms-Label">Options</label>
+                            <input id="options" class="ms-TextField-field" type="text" placeholder="Enter query string parameters">
+                        </div>
+
+                        <div class="ms-ChoiceFieldGroup" id="choicefieldgroup" role="radiogroup">
+                            <div class="ms-ChoiceFieldGroup-title">
+                                <label class="ms-Label" style="font-size:14px; font-weight:600">Insert as:</label>
+                            </div>
+                            <ul class="ms-ChoiceFieldGroup-list">
+                                <div class="ms-RadioButton aria-checked" id="radioTable">
+                                    <input tabindex="-1" type="radio" class="ms-RadioButton-input" checked="checked" value="table">
+                                    <label role="radio"
+                                           class="ms-RadioButton-field "
+                                           tabindex="0"
+                                           aria-checked="false"
+                                           name="choicefieldgroup">
+                                        <span class="ms-Label">Formatted table with headers (recommended)</span>
+                                    </label>
+                                </div>
+
+                                <div class="ms-RadioButton">
+                                    <input tabindex="-1" type="radio" class="ms-RadioButton-input" value="text">
+                                    <label role="radio"
+                                           class="ms-RadioButton-field "
+                                           tabindex="0"
+                                           aria-checked="false"
+                                           name="choicefieldgroup">
+                                        <span class="ms-Label">Plain text table</span>
+                                    </label>
+                                </div>
+                            </ul>
+                        </div>
+
+                        <br />
+
+                        <button class="ms-Button ms-Button--primary" style="background-color:#227447; border-color:#227447" id="getData">
+                            <span class="ms-Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
+                            <span class="ms-Button-label" id="button-text">Get Data</span>
+                            <span class="ms-Button-description" id="button-desc">Imports data from Reddit</span>
+                        </button>
+
+                    </div>
+                </div>
+                <div class="ms-Pivot-content" data-content="about">
+                    <div class="panePadding">
+                        <div class="ms-font-l" style="color:#227447;">Flair Analysis for Reddit</div>
+                        <b>Version:</b>  1.0
+                        <br/>
+                        <b>Created by:</b>  <a href="https://www.linkedin.com/in/rolando-jimenez-6b1a812?trk=hp-identity-name">Rolando Jimenez</a> in collaboration with <i>Ariel Zlatkovsky</i>
+                        <br />
+                       <br/>
+                        We hope you find this add-in useful. It was originally created to help Reddit moderators easily analyze flair data from their subreddits right in Excel. We are looking to expand its capabilities so if you have ideas for new features that will help you, please let us know by using the <b>Feedback</b> button below. 
+                        <br/>
+                        <br />
+                        <b>Security and Privacy</b><br />
+                        We are aware that security and privacy are important, and take them seriously. We use <a href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to connect to Reddit, so we never get access to your login credentials. Once you authorize the add-in, it will accesses Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond the Excel workbook you are importing the dat into. 
+                        If you want to learn more about how this add-in uses your data please see our <a href="http://roljs.azurewebsites.net/office-add-ins/bubbles-privacy-statement/">privacy policy</a>.
+
+                    </div>
+                </div>
+
             </div>
 
-            <div class="ms-Dropdown" tabindex="0">
-                <label class="ms-Label" style="font-size:14px; font-weight:600">Data Source</label>
-                <i class="ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown"></i>
-                <select class="ms-Dropdown-select" id="api">
-                    <option value="/api/flairlist" selected="selected">Flairs</option>
-                    <option value="/about/moderators">Moderators</option>
-                    <option value="/hot">Hot</option>
-                    <option value="/new">New</option>
-                </select>
-            </div>
 
-            <div class="ms-TextField">
-                <label class="ms-Label">Insert At (click a cell or type in)</label>
-                <input id="insertAt" class="ms-TextField-field" type="text" placeholder="Enter the R1C1 adress of a cell">
-            </div>
-
-            <div class="ms-TextField">
-                <label class="ms-Label">Max Rows</label>
-                <input id="maxRows" class="ms-TextField-field" type="text" placeholder="Enter the limit for number of total rows">
-            </div>
-
-            <div class="ms-TextField" style="display:none">
-                <label class="ms-Label">Free form API</label>
-                <input id="freeFormApi" class="ms-TextField-field" type="text" placeholder="Enter the API path">
-            </div>
-
-            <div class="ms-TextField" style="display:none">
-                <label class="ms-Label">Options</label>
-                <input id="options" class="ms-TextField-field" type="text" placeholder="Enter query string parameters">
-            </div>
-
-            <div class="ms-Toggle" id="tableToggle">
-                <span class="ms-Toggle-description">Create Table</span>
-                <input type="checkbox" class="ms-Toggle-input" />
-                <label for="demo-toggle-3" class="ms-Toggle-field is-selected" style="background-color:#227447; border-color:#227447" id="tableCheck" tabindex="0">
-                    <span class="ms-Label ms-Label--on">Yes</span>
-                    <span class="ms-Label ms-Label--off">No</span>
-                </label>
-            </div>
-
-
-            <br />
-
-            <button class="ms-Button ms-Button--primary" style="background-color:#227447; border-color:#227447" id="getData">
-                <span class="ms-Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
-                <span class="ms-Button-label" id="button-text">Get Data</span>
-                <span class="ms-Button-description" id="button-desc">Imports data from Reddit</span>
-            </button>
-            <br />
             <div class="ms-Overlay" id="overlay" style="background-color:hsla(0,0%,39%,.4);display:none">
                 <div style="position:absolute; bottom:15px; left:15px">
                     <div style="float:left; padding-right:7px">
@@ -118,10 +173,10 @@
                 <label class="ms-Label ms-fontSize-sPlus" id="status">Ready</label>
             </div>
         </div>
+
     </div>
 
-
-    <div class="ms-MessageBar" style="display:none; position:absolute; bottom:50px; left:15px; right:15px; overflow-x:hidden; overflow-y:auto" id="messageBar">
+    <div class="ms-MessageBar" style="display:none;  position:absolute; align-self:center; bottom:50px; overflow-x:hidden; overflow-y:auto" id="messageBar">
         <div class="ms-MessageBar-content">
             <div class="ms-MessageBar-icon">
                 <i class="ms-Icon ms-Icon--info"></i>

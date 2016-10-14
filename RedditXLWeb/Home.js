@@ -9,6 +9,7 @@
     var templates = [];
     var batchSize = 1000;
     var insertAt = "A1";
+    var rowsToAdd = [];
 
     // The initialize function must be run each time a new page is loaded.
     Office.initialize = function (reason) {
@@ -17,7 +18,7 @@
         $(document).ready(function () {
             // Initialize the FabricUI notification mechanism and hide it
 
-            uiInit();
+            initUI();
 
             $.ajaxSetup({
                 error: handleXhrError
@@ -48,7 +49,12 @@
         });
     }
 
-    function uiInit() {
+    function initUI() {
+
+        var PivotElements = document.querySelectorAll(".ms-Pivot");
+        for (var i = 0; i < PivotElements.length; i++) {
+            new fabric['Pivot'](PivotElements[i]);
+        }
         var DropdownHTMLElements = document.querySelectorAll('.ms-Dropdown');
         for (var i = 0; i < DropdownHTMLElements.length; ++i) {
             new fabric['Dropdown'](DropdownHTMLElements[i]);
@@ -58,10 +64,14 @@
             new fabric['TextField'](TextFieldElements[i]);
         }
 
+        var ChoiceFieldGroupElements = document.querySelectorAll(".ms-ChoiceFieldGroup");
+        for (var i = 0; i < ChoiceFieldGroupElements.length; i++) {
+            var radioGroup = new fabric['ChoiceFieldGroup'](ChoiceFieldGroupElements[i]);
+            radioGroup._choiceFieldComponents[0].check(); 
+        }
+       
 
-        var Overlay = new fabric['Overlay'](document.querySelector('#overlay'));
-
-        new fabric['Toggle'](document.querySelector('#tableToggle'));
+        var overlay = new fabric['Overlay'](document.querySelector('#overlay'));
 
         $("#template-description").text("Specify how you want the data to be imported and click Get Data.");
         $('#maxRows').val(localStorage.getItem("maxRows") ? localStorage.getItem("maxRows") : maxRows);
@@ -96,6 +106,7 @@
         var subReddit = $("#subReddit").val();
         localStorage.setItem("subReddit", subReddit);
 
+
         maxRows = $("#maxRows").val();
         localStorage.setItem("maxRows", maxRows);
 
@@ -104,6 +115,7 @@
         var insertAt = $('#insertAt').val();
 
         processedRows = 0;
+        rowsToAdd = [];
 
         ga("send", "event", "Actions", "Clicked Import Data");
 
@@ -147,43 +159,57 @@
             if (template == null) //Load the data formatting template corresponding to the API call
                 template = getTemplate(api, response);
 
+            var sheet;
+            var nextBatchId;
             Excel.run(function (ctx) {
 
-                var sheet = ctx.workbook.worksheets.getActiveWorksheet();
-                rowsAdded = addRowsAsRange(sheet, startCellR1C1, response, template);
+                sheet = ctx.workbook.worksheets.getActiveWorksheet();
+                processedRows += addRowsAsRange(sheet, startCellR1C1, response, template);
 
-                console.log(rowsAdded + "rows added");
+                nextBatchId = getNextBatchId(response, template);
+
+
+                if (nextBatchId == null || processedRows >= maxRows) {
+                    var r1c1 = initialCellR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(initialCellR1C1.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(initialCellR1C1.match(/\d+/)) + processedRows - 1);
+                    var range = sheet.getRange(r1c1);
+
+                        //var usedRange = range.getUsedRange();
+                        //ctx.load(usedRange);
+
+                        //return ctx.sync().then(function () {
+
+                            //console.log(usedRange);
+                            range.values = rowsToAdd;
+
+                            if ($("input:checked").val() == "table") {
+                                 var table = ctx.workbook.tables.add(r1c1, false);
+                                table.getHeaderRowRange().values = [template.headers];
+                                table.name = "RedditTable" + Math.random();
+                                table.getRange().getEntireColumn().format.autofitColumns();
+                                table.getRange().getEntireRow().format.autofitRows();
+                            }
+                            return ctx.sync();
+                        //});
+
+                }
+
                 return ctx.sync();
 
             }).then(function (data) { //Excel run then
-                processedRows += rowsAdded;
-                var nextBatchId = getNextBatchId(response, template);
+
 
                 if (nextBatchId && processedRows < maxRows) {
                     $('#overlay').show();
-                    $('#progress').text(processedRows + " rows...");
+                    $('#progress').text("Reading " + processedRows + " rows...");
                     $('#status').text("");
 
                     var newStartCellR1C1 = startCellR1C1.match(/\D+/) + (parseInt(startCellR1C1.match(/\d+/)) + rowsAdded);
                     loadBatchOfData(token, api, subReddit, options, nextBatchId, batchSize, template, newStartCellR1C1, initialCellR1C1);
+
                 } else {
                     $('#notificationBody').text("Last import was successful!");
                     $('#overlay').hide();
                     $('#status').text(processedRows + " total rows imported");
-
-                    if ($('#tableCheck').hasClass("is-selected")) {
-                        Excel.run(function (ctx) {
-                            var tableR1C1 = initialCellR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(initialCellR1C1.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(initialCellR1C1.match(/\d+/)) + processedRows - 1);
-                            var table = ctx.workbook.tables.add(tableR1C1, false);
-                            table.getHeaderRowRange().values = [template.headers];
-                            table.name = "RedditTable" + Math.random();
-                            table.getRange().getEntireColumn().format.autofitColumns();
-                            table.getRange().getEntireRow().format.autofitRows();
-                            return ctx.sync();
-                        }).catch(errorHandler);
-
-                    }
-
                     ga("send", "event", "Actions", "Import Data Successful");
 
                 }
@@ -310,7 +336,7 @@
     function addRowsAsRange(sheet, startCell, response, template) {
 
         var rowCount;
-        var rowsToAdd = [];
+        
 
         var rows = getRowsNode(response, template);
 
@@ -359,9 +385,9 @@
         }
 
 
-        var r1c1 = startCell + ":" + getColumnNameFromIndex(getIndexFromColumnName(startCell.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
-        var range = sheet.getRange(r1c1);
-        range.values = rowsToAdd;
+        //var r1c1 = startCell + ":" + getColumnNameFromIndex(getIndexFromColumnName(startCell.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
+        //var range = sheet.getRange(r1c1);
+        //range.values = rowsToAdd;
 
         return rowCount;
 
@@ -421,12 +447,23 @@
 
     function handleXhrError(xhr, errorType, exceptionThrown) {
         var errorMsg;
-        if (xhr.status == 0) {
-            errorMsg = "Either that subreddit doesn't exist or you're not connected"
-        } else {
-            errorMsg = "Something went wrong connecting to Reddit <br/><b>" + xhr.status + ": " + xhr.statusText + "</b>";
+        var errorTitle;
+        switch (xhr.status) {
+            case 0:
+                errorTitle = "Reddit Error";
+                errorMsg = "Cannot get data from the <b>" + $("#subReddit").val() + "</b> subreddit. Please make sure you have spelled the subreddit name correctly, or check your internet connection."
+                break;
+            case 401, 403:
+                errorTitle = "Access Denied";
+                errorMsg = "Cannot get data from the <b>" + $("#subReddit").val() + "</b> subreddit. Please check that you have 'flair' permissions as a moderator on this subreddit.";
+                break;
+            default:
+                errorTitle = "Reddit Error";
+                errorMsg = "Something went wrong connecting to Reddit <br/><b>" + xhr.status + ": " + xhr.statusText + "</b>";
+                break;
+
         }
-        showNotification("Reddit Error", errorMsg);
+        showNotification(errorTitle, errorMsg);
 
     }
 
@@ -449,7 +486,7 @@
         $('#status').text(processedRows + " total rows imported");
         console.log("Error: " + content);
 
-        $("#notificationBody").html("<h2>" + header + "</h2>" + content);
+        $("#notificationBody").html("<h2>" + header + "</h2>" + content + "<br/><br/>");
         $("#messageBar").slideDown();
     }
 })();
