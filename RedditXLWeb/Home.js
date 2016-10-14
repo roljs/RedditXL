@@ -9,7 +9,7 @@
     var templates = [];
     var batchSize = 1000;
     var insertAt = "A1";
-    var rowsToAdd = [];
+    //var rowsToAdd = [];
 
     // The initialize function must be run each time a new page is loaded.
     Office.initialize = function (reason) {
@@ -67,9 +67,9 @@
         var ChoiceFieldGroupElements = document.querySelectorAll(".ms-ChoiceFieldGroup");
         for (var i = 0; i < ChoiceFieldGroupElements.length; i++) {
             var radioGroup = new fabric['ChoiceFieldGroup'](ChoiceFieldGroupElements[i]);
-            radioGroup._choiceFieldComponents[0].check(); 
+            radioGroup._choiceFieldComponents[0].check();
         }
-       
+
 
         var overlay = new fabric['Overlay'](document.querySelector('#overlay'));
 
@@ -115,7 +115,6 @@
         var insertAt = $('#insertAt').val();
 
         processedRows = 0;
-        rowsToAdd = [];
 
         ga("send", "event", "Actions", "Clicked Import Data");
 
@@ -161,35 +160,41 @@
 
             var sheet;
             var nextBatchId;
+
             Excel.run(function (ctx) {
 
                 sheet = ctx.workbook.worksheets.getActiveWorksheet();
-                processedRows += addRowsAsRange(sheet, startCellR1C1, response, template);
+                rowsAdded = addRowsAsRange(sheet, startCellR1C1, response, template);
+                processedRows += rowsAdded;
+
 
                 nextBatchId = getNextBatchId(response, template);
 
 
-                if (nextBatchId == null || processedRows >= maxRows) {
+                if (!nextBatchId ||  processedRows >= maxRows) { //We got the last batch or we reached the max rows
+
+                    $('#progress').text("Importing " + processedRows + " rows...");
+
                     var r1c1 = initialCellR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(initialCellR1C1.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(initialCellR1C1.match(/\d+/)) + processedRows - 1);
                     var range = sheet.getRange(r1c1);
 
-                        //var usedRange = range.getUsedRange();
-                        //ctx.load(usedRange);
+                    //var usedRange = range.getUsedRange();
+                    //ctx.load(usedRange);
 
-                        //return ctx.sync().then(function () {
+                    //return ctx.sync().then(function () {
 
-                            //console.log(usedRange);
-                            range.values = rowsToAdd;
+                    //console.log(usedRange);
+                    //range.values = rowsToAdd;
 
-                            if ($("input:checked").val() == "table") {
-                                 var table = ctx.workbook.tables.add(r1c1, false);
-                                table.getHeaderRowRange().values = [template.headers];
-                                table.name = "RedditTable" + Math.random();
-                                table.getRange().getEntireColumn().format.autofitColumns();
-                                table.getRange().getEntireRow().format.autofitRows();
-                            }
-                            return ctx.sync();
-                        //});
+                    if ($("input:checked").val() == "table") {
+                        var table = ctx.workbook.tables.add(r1c1, false);
+                        table.getHeaderRowRange().values = [template.headers];
+                        table.name = "RedditTable" + Math.random();
+                        table.getRange().getEntireColumn().format.autofitColumns();
+                        table.getRange().getEntireRow().format.autofitRows();
+                    }
+                    return ctx.sync();
+                    //});
 
                 }
 
@@ -336,7 +341,8 @@
     function addRowsAsRange(sheet, startCell, response, template) {
 
         var rowCount;
-        
+        var rowsToAdd = [];
+
 
         var rows = getRowsNode(response, template);
 
@@ -379,15 +385,12 @@
 
             rowsToAdd.push(values);
 
-            //$('#progress').text(processedRows + rowCount + " rows...");
-
-
         }
 
 
-        //var r1c1 = startCell + ":" + getColumnNameFromIndex(getIndexFromColumnName(startCell.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
-        //var range = sheet.getRange(r1c1);
-        //range.values = rowsToAdd;
+        var r1c1 = startCell + ":" + getColumnNameFromIndex(getIndexFromColumnName(startCell.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
+        var range = sheet.getRange(r1c1);
+        range.values = rowsToAdd;
 
         return rowCount;
 

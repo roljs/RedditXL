@@ -151,7 +151,7 @@
                         <br/>
                         <br />
                         <b>Security and Privacy</b><br />
-                        We are aware that security and privacy are important, and take them seriously. We use <a href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to connect to Reddit, so we never get access to your login credentials. Once you authorize the add-in, it will accesses Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond the Excel workbook you are importing the dat into. 
+                        We are aware that security and privacy are important and take them seriously. We rely on Reddit's implementation of <a href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to handle login and authorization as well as <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">SSL</a> for data transmissions, so we never get access to your login credentials or your data. Once you authorize the add-in, it will access Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond your Excel workbook. 
                         If you want to learn more about how this add-in uses your data please see our <a href="http://roljs.azurewebsites.net/office-add-ins/bubbles-privacy-statement/">privacy policy</a>.
 
                     </div>
@@ -169,7 +169,7 @@
                     <label class="ms-Label ms-fontSize-sPlus" id="progress">Progress</label>
                 </div>
             </div>
-            <div style="position:absolute; bottom:15px; left:15px">
+            <div style="position:absolute; bottom:15px; left:20px">
                 <label class="ms-Label ms-fontSize-sPlus" id="status">Ready</label>
             </div>
         </div>
