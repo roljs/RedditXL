@@ -84,6 +84,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\value.placemat.css" />
     <Content Include="Images\progress_circle.gif" />
     <Content Include="Images\RedditXL Logo 2.png" />
     <Content Include="Images\RedditXL Logo.png" />

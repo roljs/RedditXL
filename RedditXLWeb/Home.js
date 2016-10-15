@@ -11,6 +11,8 @@
     var insertAt = "A1";
     //var rowsToAdd = [];
 
+
+
     // The initialize function must be run each time a new page is loaded.
     Office.initialize = function (reason) {
         if (OfficeJSHelpers.Authenticator.isAuthDialog()) return;
@@ -80,23 +82,38 @@
         $('#insertAt').val("A1");
 
         // Add a click event handlers
+        $('#getStarted').click(function () { $("#welcomePage").fadeOut(); $("#mainPage").fadeIn(); ga("send", "event", "Actions", "Got Started"); });
         $('#getData').click(importData);
         $('body').click(function () { $('#messageBar').hide(); });
         $('#status').click(function (event) { $('#messageBar').toggle(); event.stopPropagation(); });
+
+        if (!Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
+            $("#insertAt").show();
+        }
+
+        if (!localStorage.getItem("welcome")) {
+            localStorage.setItem("welcome", "true");
+            $("#welcomePage").show();
+        }
+        else {
+            $("#mainPage").show();
+        }
 
     }
 
 
     function handleSelectionChange(args) {
 
-        Excel.run(function (ctx) {
-            var selectedRange = ctx.workbook.getSelectedRange();
-            selectedRange.load('address');
-            return ctx.sync().then(function () {
-                $("#insertAt").val(selectedRange.address.split("!")[1].split(":")[0]);
-            });
+        if (!Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
+            Excel.run(function (ctx) {
+                var selectedRange = ctx.workbook.getSelectedRange();
+                selectedRange.load('address');
+                return ctx.sync().then(function () {
+                    $("#insertAt").val(selectedRange.address.split("!")[1].split(":")[0]);
+                });
 
-        });
+            });
+        }
 
     }
 
@@ -125,104 +142,123 @@
                 $('#progress').text("Connecting...");
                 $('#status').text("");
                 $('#notificationBody').text("Executing...");
-                loadBatchOfData(token, api, subReddit, qs, "", batchSize, null, insertAt, insertAt);
+                var config = {
+                    token: token,
+                    api: api,
+                    subReddit: subReddit,
+                    qs: qs,
+                    batchSize: batchSize,
+                    template: null,
+                    insertAtR1C1: insertAt
+                }
+                loadBatchOfData(config, insertAt, "");
 
             }).catch(errorHandler);
     }
 
-    function loadBatchOfData(token, api, subReddit, options, watermark, batchSize, template, startCellR1C1, initialCellR1C1) {
+    function loadBatchOfData(config, insertAt, batchId) {
 
-        var url = "https://oauth.reddit.com/r/" + subReddit + api;
-        //url = "https://www.reddit.com/r/survivor/api/flairlist.json";
+        var url = "https://oauth.reddit.com/r/" + config.subReddit + config.api;
 
-        var rowsAdded = 0;
         var baseUrl = url;
 
-        url = baseUrl + "?limit=" + batchSize;
-        if (watermark != "") {
-            url += "&after=" + watermark;
+        url = baseUrl + "?limit=" + config.batchSize;
+        if (batchId != "") {
+            url += "&after=" + batchId;
         }
-        if (options != "")
-            url += "&" + options;
+        if (config.qs != "")
+            url += "&" + qs;
 
         $.ajax({
             url: url,
             dataType: "json",
             headers: {
-                "Authorization": "Bearer " + token.access_token,
+                "Authorization": "Bearer " + config.token.access_token,
                 "User-Agent": "office:com.roljs.excelerator-for-reddit:v1.0.0 (by /u/roljs)"
             }
         }).then(function (response) {
             console.log(response);
 
-            if (template == null) //Load the data formatting template corresponding to the API call
-                template = getTemplate(api, response);
+            if (config.template == null) //Load the data formatting template corresponding to the API call
+                config.template = getTemplate(config.api, response);
 
-            var sheet;
-            var nextBatchId;
+            if (Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
+                loadWithExcelApi(response, insertAt, config);
+            } else {
+                showNotification("Unsupported Office Version", "To run this add-in you need the latest version of Office 365.");
+            }
 
-            Excel.run(function (ctx) {
-
-                sheet = ctx.workbook.worksheets.getActiveWorksheet();
-                rowsAdded = addRowsAsRange(sheet, startCellR1C1, response, template);
-                processedRows += rowsAdded;
-
-
-                nextBatchId = getNextBatchId(response, template);
-
-
-                if (!nextBatchId ||  processedRows >= maxRows) { //We got the last batch or we reached the max rows
-
-                    $('#progress').text("Importing " + processedRows + " rows...");
-
-                    var r1c1 = initialCellR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(initialCellR1C1.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(initialCellR1C1.match(/\d+/)) + processedRows - 1);
-                    var range = sheet.getRange(r1c1);
-
-                    //var usedRange = range.getUsedRange();
-                    //ctx.load(usedRange);
-
-                    //return ctx.sync().then(function () {
-
-                    //console.log(usedRange);
-                    //range.values = rowsToAdd;
-
-                    if ($("input:checked").val() == "table") {
-                        var table = ctx.workbook.tables.add(r1c1, false);
-                        table.getHeaderRowRange().values = [template.headers];
-                        table.name = "RedditTable" + Math.random();
-                        table.getRange().getEntireColumn().format.autofitColumns();
-                        table.getRange().getEntireRow().format.autofitRows();
-                    }
-                    return ctx.sync();
-                    //});
-
-                }
-
-                return ctx.sync();
-
-            }).then(function (data) { //Excel run then
-
-
-                if (nextBatchId && processedRows < maxRows) {
-                    $('#overlay').show();
-                    $('#progress').text("Reading " + processedRows + " rows...");
-                    $('#status').text("");
-
-                    var newStartCellR1C1 = startCellR1C1.match(/\D+/) + (parseInt(startCellR1C1.match(/\d+/)) + rowsAdded);
-                    loadBatchOfData(token, api, subReddit, options, nextBatchId, batchSize, template, newStartCellR1C1, initialCellR1C1);
-
-                } else {
-                    $('#notificationBody').text("Last import was successful!");
-                    $('#overlay').hide();
-                    $('#status').text(processedRows + " total rows imported");
-                    ga("send", "event", "Actions", "Import Data Successful");
-
-                }
-
-                console.log(processedRows + " rows processed so far.");
-            }).catch(errorHandler); //Excel run catch
         });
     }
+
+    function loadWithExcelApi(response, startCellR1C1, config) {
+        var sheet;
+        var nextBatchId;
+        var rowsAdded = 0;
+
+        Excel.run(function (ctx) {
+
+            sheet = ctx.workbook.worksheets.getActiveWorksheet();
+            rowsAdded = addRowsAsRange(sheet, startCellR1C1, response, config.template);
+            processedRows += rowsAdded;
+
+
+            nextBatchId = getNextBatchId(response, config.template);
+
+
+            if (!nextBatchId || processedRows >= maxRows) { //We got the last batch or we reached the max rows
+
+                $('#progress').text("Importing " + processedRows + " rows...");
+
+                var r1c1 = config.insertAtR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(config.insertAtR1C1.match(/\D+/)[0]) + config.template.headers.length - 1) + (parseInt(config.insertAtR1C1.match(/\d+/)) + processedRows - 1);
+                var range = sheet.getRange(r1c1);
+
+                //var usedRange = range.getUsedRange();
+                //ctx.load(usedRange);
+
+                //return ctx.sync().then(function () {
+
+                //console.log(usedRange);
+                //range.values = rowsToAdd;
+
+                if ($("input:checked").val() == "table") {
+                    var table = ctx.workbook.tables.add(r1c1, false);
+                    table.getHeaderRowRange().values = [config.template.headers];
+                    table.name = "RedditTable" + Math.random();
+                    table.getRange().getEntireColumn().format.autofitColumns();
+                    table.getRange().getEntireRow().format.autofitRows();
+                }
+                return ctx.sync();
+                //});
+
+            }
+
+            return ctx.sync();
+
+        }).then(function (data) { //Excel run then
+
+
+            if (nextBatchId && processedRows < maxRows) {
+                $('#overlay').show();
+                $('#progress').text("Reading " + processedRows + " rows...");
+                $('#status').text("");
+
+                var newStartCellR1C1 = startCellR1C1.match(/\D+/) + (parseInt(startCellR1C1.match(/\d+/)) + rowsAdded);
+                loadBatchOfData(config, newStartCellR1C1, nextBatchId);
+
+            } else {
+                $('#notificationBody').text("Last import was successful!");
+                $('#overlay').hide();
+                $('#status').text(processedRows + " total rows imported");
+                ga("send", "event", "Actions", "Import Data Successful");
+
+            }
+
+            console.log(processedRows + " rows processed so far.");
+        }).catch(errorHandler); //Excel run catch
+
+    }
+
 
     function getNextBatchId(response, template) {
         var nextBatchId = "";
@@ -459,6 +495,10 @@
             case 401, 403:
                 errorTitle = "Access Denied";
                 errorMsg = "Cannot get data from the <b>" + $("#subReddit").val() + "</b> subreddit. Please check that you have 'flair' permissions as a moderator on this subreddit.";
+                break;
+            case 400:
+                errorTitle = "Reddit Error";
+                errorMsg = "Did you specify a subreddit?";
                 break;
             default:
                 errorTitle = "Reddit Error";

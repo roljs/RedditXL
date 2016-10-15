@@ -38,12 +38,40 @@
 
     <link href="Content/fabric.css" rel="stylesheet" />
     <link href="Content/fabric.components.css" rel="stylesheet" />
-
+    <link href="Content/value.placemat.css" rel="stylesheet" />
 </head>
 <body>
 
-    <div id="content-main">
 
+    <div class="ms-firstrun-value" id="welcomePage" style="display:none">
+        <div class="ms-firstrun-value__header ms-bgColor-themePrimary" style="background-color:#227447;">
+            <div class="ms-firstrun-value__logo">
+                <img src="Images/RedditXL Logo 2.png" />
+            </div>
+            <div class="ms-firstrun-value__title">
+                <h1 class="ms-font-xl ms-fontWeight-light ms-fontColor-white">WELCOME</h1>
+            </div>
+            <div class="ms-firstrun-value__subtitle ms-font-m ms-fontWeight-light ms-fontColor-white">
+                <p>Get your flair data in Excel fast!</p>
+            </div>
+        </div>
+        <div class="ms-firstrun-value__content">
+            <div class="ms-font-m ms-fontColor-themePrimary ms-firstrun-value__content--centered">
+                <ul class="ms-firstrun-value__list ms-fontWeight-regular">
+                    <li><span style="color:#227447;"><i class="ms-Icon enlarge ms-Icon--download" style="color:#227447;"></i>Download flair data from Reddit</span></li>
+                    <li><span style="color:#227447;"><i class="ms-Icon enlarge ms-Icon--chart"></i>Visualize it with Excel charts</span></li>
+                    <li><span style="color:#227447;"><i class="ms-Icon enlarge ms-Icon--glasses"></i>Use the power of Excel to analyze it</span></li>
+                </ul>
+                <button class="ms-firstrun-value__action--primary ms-bgColor-themePrimary ms-Button ms-Button--command ms-fontColor-white ms-font-m" id="getStarted">
+                    <span class="ms-Button-label">Get Started!</span>
+                    <span class="ms-Button-icon"><i class="ms-Icon ms-Icon--chevronThickRight"></i></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="mainPage" style="display:none">
         <div class="pivotPadding">
             <div class="ms-Pivot ">
                 <ul class="ms-Pivot-links">
@@ -59,11 +87,11 @@
                 </ul>
                 <div class="ms-Pivot-content" data-content="home">
                     <div class="panePadding">
-
                         <div class="ms-font-l" style="color:#227447;">Import Your Data</div>
+
                         <p class="ms-font-m" style="color:#227447;" id="template-description"></p>
 
-
+                        <br />
                         <div class="ms-TextField">
                             <label class="ms-Label">Subreddit</label>
                             <input id="subReddit" class="ms-TextField-field" type="text" placeholder="Enter the name of a subreddit">
@@ -80,7 +108,7 @@
                             </select>
                         </div>
 
-                        <div class="ms-TextField">
+                        <div class="ms-TextField" id="insertAt" style="display:none">
                             <label class="ms-Label">Insert At (click a cell or type in)</label>
                             <input id="insertAt" class="ms-TextField-field" type="text" placeholder="Enter the R1C1 adress of a cell">
                         </div>
@@ -143,15 +171,15 @@
                     <div class="panePadding">
                         <div class="ms-font-l" style="color:#227447;">Flair Analysis for Reddit</div>
                         <b>Version:</b>  1.0
-                        <br/>
-                        <b>Created by:</b>  <a href="https://www.linkedin.com/in/rolando-jimenez-6b1a812?trk=hp-identity-name">Rolando Jimenez</a> in collaboration with <i>Ariel Zlatkovsky</i>
                         <br />
-                       <br/>
-                        We hope you find this add-in useful. It was originally created to help Reddit moderators easily analyze flair data from their subreddits right in Excel. We are looking to expand its capabilities so if you have ideas for new features that will help you, please let us know by using the <b>Feedback</b> button below. 
-                        <br/>
+                        <b>Created by:</b>  <a href="https://www.linkedin.com/in/rolando-jimenez-6b1a812?trk=hp-identity-name">Rolando Jimenez</a> in collaboration with <i>Ariel Zlatkovski</i>
+                        <br />
+                        <br />
+                        We hope you find this add-in useful. It was originally created to help Reddit moderators easily pull flair data from their subreddits into Excel. We are looking to expand its capabilities so if you have ideas for new features that will help you, please let us know by using the <b>Feedback</b> button below.
+                        <br />
                         <br />
                         <b>Security and Privacy</b><br />
-                        We are aware that security and privacy are important and take them seriously. We rely on Reddit's implementation of <a href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to handle login and authorization as well as <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">SSL</a> for data transmissions, so we never get access to your login credentials or your data. Once you authorize the add-in, it will access Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond your Excel workbook. 
+                        We are aware that security and privacy are important and take them seriously. We rely on Reddit's implementation of <a href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to handle login and authorization as well as <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">SSL</a> for data transmissions, so we never get access to your login credentials or your data. Once you authorize the add-in, it will access Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond your Excel workbook.
                         If you want to learn more about how this add-in uses your data please see our <a href="http://roljs.azurewebsites.net/office-add-ins/bubbles-privacy-statement/">privacy policy</a>.
 
                     </div>
@@ -176,10 +204,10 @@
 
     </div>
 
-    <div class="ms-MessageBar" style="display:none;  position:absolute; align-self:center; bottom:50px; overflow-x:hidden; overflow-y:auto" id="messageBar">
+    <div class="ms-MessageBar" style="display:none;  width:90%;  position:absolute; align-self:center; bottom:50px; overflow-x:hidden; overflow-y:auto" id="messageBar">
         <div class="ms-MessageBar-content">
             <div class="ms-MessageBar-icon">
-                <i class="ms-Icon ms-Icon--info"></i>
+                <i class="ms-Icon ms-Icon--alert2"></i>
             </div>
             <div class="ms-MessageBar-text" id="notificationBody">
                 Nothing has been executed yet.
