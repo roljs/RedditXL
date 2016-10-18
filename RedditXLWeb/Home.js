@@ -9,7 +9,7 @@
     var templates = [];
     var batchSize = 1000;
     var insertAt = "A1";
-    //var rowsToAdd = [];
+    var rowsBuffer = [];
 
 
 
@@ -87,8 +87,8 @@
         $('body').click(function () { $('#messageBar').hide(); });
         $('#status').click(function (event) { $('#messageBar').toggle(); event.stopPropagation(); });
 
-        if (!Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
-            $("#insertAt").show();
+        if (Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
+            $("#insertAtControl").show();
         }
 
         if (!localStorage.getItem("welcome")) {
@@ -104,7 +104,7 @@
 
     function handleSelectionChange(args) {
 
-        if (!Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
+        if (Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
             Excel.run(function (ctx) {
                 var selectedRange = ctx.workbook.getSelectedRange();
                 selectedRange.load('address');
@@ -132,6 +132,7 @@
         var insertAt = $('#insertAt').val();
 
         processedRows = 0;
+        rowsBuffer = [];
 
         ga("send", "event", "Actions", "Clicked Import Data");
 
@@ -185,10 +186,42 @@
             if (Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
                 loadWithExcelApi(response, insertAt, config);
             } else {
-                showNotification("Unsupported Office Version", "To run this add-in you need the latest version of Office 365.");
+                loadWithCommonApi(response, config);
+                //showNotification("Unsupported Office Version", "To run this add-in you need the latest version of Office 365.");
             }
 
         });
+    }
+
+    function loadWithCommonApi(response, config) {
+
+        var rowsToAdd = getRowsToAdd(response, config.template);
+        processedRows += rowsToAdd.length;
+        var nextBatchId = getNextBatchId(response, config.template);
+
+        rowsBuffer = rowsBuffer.concat(rowsToAdd);
+
+        if (!processNextBatch(config, nextBatchId, "")) {//This was the last batch
+            var data;
+
+            if ($("input:checked").val() == "table") { //If import as table checked, create a new table
+                data = new Office.TableData;
+                data.headers = config.template.headers;
+                data.rows = rowsBuffer;
+            }
+            else {
+                data = rowsBuffer;
+            }
+
+            Office.context.document.setSelectedDataAsync(data, {}, function (result) {
+                if (result.status != 'succeeded') {
+                    errorHandler(result.error.message);
+
+                }
+
+            });
+        }
+
     }
 
     function loadWithExcelApi(response, startCellR1C1, config) {
@@ -199,7 +232,16 @@
         Excel.run(function (ctx) {
 
             sheet = ctx.workbook.worksheets.getActiveWorksheet();
-            rowsAdded = addRowsAsRange(sheet, startCellR1C1, response, config.template);
+
+            var rowsToAdd = getRowsToAdd(response, config.template);
+
+            //TODO: Add logic here to determine if rows will overlap existing data
+
+            var r1c1 = startCellR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(startCellR1C1.match(/\D+/)[0]) + config.template.headers.length - 1) + (parseInt(startCellR1C1.match(/\d+/)) + rowsToAdd.length - 1);
+            var range = sheet.getRange(r1c1);
+            range.values = rowsToAdd;
+            rowsAdded = rowsToAdd.length;
+
             processedRows += rowsAdded;
 
 
@@ -210,26 +252,16 @@
 
                 $('#progress').text("Importing " + processedRows + " rows...");
 
-                var r1c1 = config.insertAtR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(config.insertAtR1C1.match(/\D+/)[0]) + config.template.headers.length - 1) + (parseInt(config.insertAtR1C1.match(/\d+/)) + processedRows - 1);
-                var range = sheet.getRange(r1c1);
-
-                //var usedRange = range.getUsedRange();
-                //ctx.load(usedRange);
-
-                //return ctx.sync().then(function () {
-
-                //console.log(usedRange);
-                //range.values = rowsToAdd;
-
-                if ($("input:checked").val() == "table") {
-                    var table = ctx.workbook.tables.add(r1c1, false);
+                if ($("input:checked").val() == "table") { //If import as table checked, create a new table
+                    var r1c1 = config.insertAtR1C1 + ":" + getColumnNameFromIndex(getIndexFromColumnName(config.insertAtR1C1.match(/\D+/)[0]) + config.template.headers.length - 1) + (parseInt(config.insertAtR1C1.match(/\d+/)) + processedRows - 1);
+                    var range = sheet.getRange(r1c1);
+                    var table = sheet.tables.add(r1c1, false);
                     table.getHeaderRowRange().values = [config.template.headers];
                     table.name = "RedditTable" + Math.random();
                     table.getRange().getEntireColumn().format.autofitColumns();
                     table.getRange().getEntireRow().format.autofitRows();
                 }
                 return ctx.sync();
-                //});
 
             }
 
@@ -237,28 +269,35 @@
 
         }).then(function (data) { //Excel run then
 
+            var newStartCellR1C1 = startCellR1C1.match(/\D+/) + (parseInt(startCellR1C1.match(/\d+/)) + rowsAdded);
 
-            if (nextBatchId && processedRows < maxRows) {
-                $('#overlay').show();
-                $('#progress').text("Reading " + processedRows + " rows...");
-                $('#status').text("");
-
-                var newStartCellR1C1 = startCellR1C1.match(/\D+/) + (parseInt(startCellR1C1.match(/\d+/)) + rowsAdded);
-                loadBatchOfData(config, newStartCellR1C1, nextBatchId);
-
-            } else {
-                $('#notificationBody').text("Last import was successful!");
-                $('#overlay').hide();
-                $('#status').text(processedRows + " total rows imported");
-                ga("send", "event", "Actions", "Import Data Successful");
-
-            }
+            processNextBatch(config, nextBatchId, newStartCellR1C1);
 
             console.log(processedRows + " rows processed so far.");
         }).catch(errorHandler); //Excel run catch
 
     }
 
+    function processNextBatch(config, nextBatchId, startCellR1C1) {
+        var result = true;
+
+        if (nextBatchId && processedRows < maxRows) {
+            $('#overlay').show();
+            $('#progress').text("Reading " + processedRows + " rows...");
+            $('#status').text("");
+
+            loadBatchOfData(config, startCellR1C1, nextBatchId);
+
+        } else {
+            $('#notificationBody').text("Last import was successful!");
+            $('#overlay').hide();
+            $('#status').text(processedRows + " total rows imported");
+            ga("send", "event", "Actions", "Import Data Successful");
+            result = false;
+        }
+
+        return result;
+    }
 
     function getNextBatchId(response, template) {
         var nextBatchId = "";
@@ -374,7 +413,7 @@
     }
 
 
-    function addRowsAsRange(sheet, startCell, response, template) {
+    function getRowsToAdd(response, template) {
 
         var rowCount;
         var rowsToAdd = [];
@@ -394,24 +433,25 @@
             for (var count = 0; count < template.headers.length; count++) {
                 var value = item[template.props[count]];
                 if (typeof value != "undefined") {
-                    switch (template.types[count]) {
-                        case "epochDate":
-                            values.push(epochSecsToDateString(value));
-                            break;
-                        case "number":
-                            values.push(value);
-                            break;
-                        case "string":
-                            values.push(value);
-                            break;
-                        case "undefined":
-                            values.push("");
-                            break;
-                        default:
-                            if (value == null)
+                    if (value == null) {
+                        values.push("");
+                    } else {
+                        switch (template.types[count]) {
+                            case "epochDate":
+                                values.push(epochSecsToDateString(value));
+                                break;
+                            case "number":
+                                values.push(value);
+                                break;
+                            case "string":
+                                values.push(value);
+                                break;
+                            case "undefined":
                                 values.push("");
-                            else
+                                break;
+                            default:
                                 values.push(JSON.stringify(value));
+                        }
                     }
                 } else {
                     console.log("Item doesn't have property " + template.props[count]);
@@ -423,12 +463,7 @@
 
         }
 
-
-        var r1c1 = startCell + ":" + getColumnNameFromIndex(getIndexFromColumnName(startCell.match(/\D+/)[0]) + template.headers.length - 1) + (parseInt(startCell.match(/\d+/)) + rowCount - 1);
-        var range = sheet.getRange(r1c1);
-        range.values = rowsToAdd;
-
-        return rowCount;
+        return rowsToAdd;
 
     }
 
