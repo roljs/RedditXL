@@ -30,25 +30,31 @@
                 templates = json.templates;
             });
 
-            authenticator = new OfficeJSHelpers.Authenticator();
-
-            authenticator.endpoints.add("Reddit", {
-                baseUrl: 'https://www.reddit.com',
-                authorizeUrl: '/api/v1/authorize.compact',
-                resource: 'https://www.reddit.com',
-                responseType: 'token',
-                clientId: "ChRoDF-hhrStSA",
-                state: "qwerty",
-                redirectUrl: "https://excelerator.azurewebsites.net/Home.html",
-                //redirectUrl: "https://localhost:44300/Home.html",
-                scope: "identity read flair modflair"
-            });
+            initAuth();
 
             Office.context.document.addHandlerAsync(Office.EventType.DocumentSelectionChanged, handleSelectionChange);
 
             ga("send", "event", "Actions", "Initialized");
 
         });
+    }
+
+    function initAuth() {
+
+        authenticator = new OfficeJSHelpers.Authenticator();
+
+        authenticator.endpoints.add("Reddit", {
+            baseUrl: 'https://www.reddit.com',
+            authorizeUrl: '/api/v1/authorize.compact',
+            resource: 'https://www.reddit.com',
+            responseType: 'token',
+            clientId: "ChRoDF-hhrStSA",
+            state: "qwerty",
+            redirectUrl: "https://excelerator.azurewebsites.net/Home.html",
+            //redirectUrl: "https://localhost:44300/Home.html",
+            scope: "identity read flair modflair"
+        });
+
     }
 
     function initUI() {
@@ -86,6 +92,7 @@
         $('#getData').click(importData);
         $('body').click(function () { $('#messageBar').hide(); });
         $('#status').click(function (event) { $('#messageBar').toggle(); event.stopPropagation(); });
+        $('#signOut').click(signOut);
 
         if (Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
             $("#insertAtControl").show();
@@ -99,8 +106,41 @@
             $("#mainPage").show();
         }
 
+        setUser();
+     }
+
+    function setUser() {
+
+        if (localStorage["OAuth2Tokens"]) {
+            var tokens = JSON.parse(localStorage["OAuth2Tokens"]);
+
+            if (tokens["Reddit"]) {
+                var redditToken = tokens["Reddit"];
+                if (Date.now() < Date.parse(redditToken.expires_at) - 60000) {
+
+                    $.ajax({
+                        url: "https://oauth.reddit.com/api/v1/me",
+                        dataType: "json",
+                        headers: {
+                            "Authorization": "Bearer " + redditToken.access_token,
+                            "User-Agent": "office:com.roljs.excelerator-for-reddit:v1.0.0 (by /u/roljs)"
+                        }
+                    }).then(function (response) {
+                        $("#userDiv").show();
+                        $("#userName").text(response.name);
+                    });
+
+                }
+            }
+        }
+
     }
 
+    function signOut() {
+        localStorage.removeItem("OAuth2Tokens");
+        initAuth();
+        $("#userDiv").hide();
+    }
 
     function handleSelectionChange(args) {
 
@@ -135,14 +175,17 @@
         rowsBuffer = [];
 
         ga("send", "event", "Actions", "Clicked Import Data");
-
+        
         //Initiate REST call execution from the service to load the data in batches
         authenticator.authenticate("Reddit")
             .then(function (token) {
+
                 $('#overlay').show();
                 $('#progress').text("Connecting...");
                 $('#status').text("");
                 $('#notificationBody').text("Executing...");
+                setUser();
+
                 var config = {
                     token: token,
                     api: api,
