@@ -82,7 +82,7 @@
                     <li class="ms-Pivot-link is-selected" data-content="home" title="Home" tabindex="1">
                         Home
                     </li>
-                    <li class="ms-Pivot-link " data-content="about" title="About" tabindex="1">
+                    <li class="ms-Pivot-link " data-content="about" title="About" tabindex="1" id="about">
                         About
                     </li>
                     <li class="ms-Pivot-link" tabindex="1">
@@ -169,6 +169,9 @@
                             <span class="ms-Button-description" id="button-desc">Imports data from Reddit</span>
                         </button>
 
+                    </div> <!--Padding Div -->
+                    <div style="position:absolute; bottom:15px; left:20px">
+                        <label class="ms-Label ms-fontSize-sPlus" id="status">Ready</label>
                     </div>
                 </div>
                 <div class="ms-Pivot-content" data-content="about">
@@ -185,7 +188,12 @@
                         <b>Security and Privacy</b><br />
                         We are aware that security and privacy are important and take them seriously. We rely on Reddit's implementation of <a href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to handle login and authorization as well as <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">SSL</a> for data transmissions, so we never get access to your login credentials or your data. Once you authorize the add-in, it will access Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond your Excel workbook.
                         If you want to learn more about how this add-in uses your data please see our <a href="http://roljs.azurewebsites.net/office-add-ins/bubbles-privacy-statement/">privacy policy</a>.
-
+                        <br/><br/>
+                        <button class="ms-Button ms-Button--command" style="background-color:#227447; border-color:#227447" id="showWelcome">
+                            <span class="ms-Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
+                            <span class="ms-Button-label" id="button-text" style="color:white">Show Welcome</span>
+                            <span class="ms-Button-description" id="button-desc">Displays the welcome page</span>
+                        </button>
                     </div>
                 </div>
 
@@ -201,9 +209,7 @@
                     <label class="ms-Label ms-fontSize-sPlus" id="progress">Progress</label>
                 </div>
             </div>
-            <div style="position:absolute; bottom:15px; left:20px">
-                <label class="ms-Label ms-fontSize-sPlus" id="status">Ready</label>
-            </div>
+
         </div>
 
     </div>

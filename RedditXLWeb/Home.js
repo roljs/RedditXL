@@ -59,10 +59,9 @@
 
     function initUI() {
 
-        var PivotElements = document.querySelectorAll(".ms-Pivot");
-        for (var i = 0; i < PivotElements.length; i++) {
-            new fabric['Pivot'](PivotElements[i]);
-        }
+        var PivotElement = document.querySelector(".ms-Pivot");
+        var pivot = new fabric['Pivot'](PivotElement);
+
         var DropdownHTMLElements = document.querySelectorAll('.ms-Dropdown');
         for (var i = 0; i < DropdownHTMLElements.length; ++i) {
             new fabric['Dropdown'](DropdownHTMLElements[i]);
@@ -93,6 +92,7 @@
         $('body').click(function () { $('#messageBar').hide(); });
         $('#status').click(function (event) { $('#messageBar').toggle(); event.stopPropagation(); });
         $('#signOut').click(signOut);
+        $('#showWelcome').click(function (event) { $("#welcomePage").fadeIn(); $("#mainPage").hide(); });
 
         if (Office.context.requirements.isSetSupported('ExcelApi', '1.2')) {
             $("#insertAtControl").show();
