@@ -80,7 +80,6 @@
 
         var overlay = new fabric['Overlay'](document.querySelector('#overlay'));
 
-        $("#template-description").text("Specify how you want the data to be imported and click Get Data.");
         $('#maxRows').val(localStorage.getItem("maxRows") ? localStorage.getItem("maxRows") : maxRows);
         $('#subReddit').val(localStorage.getItem("subReddit"));
         $('#tableCheck').prop("checked", true);
@@ -111,7 +110,7 @@
 
     function setUser() {
 
-        if (localStorage["OAuth2Tokens"]) {
+        if (localStorage["OAuth2Tokens"] && localStorage["OAuth2Tokens"] != "null") {
             var tokens = JSON.parse(localStorage["OAuth2Tokens"]);
 
             if (tokens["Reddit"]) {
@@ -197,7 +196,7 @@
                 }
                 loadBatchOfData(config, insertAt, "");
 
-            }).catch(errorHandler);
+            }).catch(handleAuthError);
     }
 
     function loadBatchOfData(config, insertAt, batchId) {
@@ -562,6 +561,24 @@
 
     }
 
+    function handleAuthError(error) {
+        var errorMsg;
+        var errorTitle;
+        switch (error.error) {
+            case "access_denied":
+                errorTitle = "Authorization Error";
+                errorMsg = "This add-in has not been authorized to access Reddit. To import your Reddit data, you need to select 'Allow' on the Reddit authorization dialog."
+                break;
+            default:
+                errorTitle = "Authorization Error";
+                errorMsg = "This add-in has not been authorized to access Reddit: " + error.error + " " + error.status;
+                break;
+
+        }
+        showNotification(errorTitle, errorMsg);
+
+    }
+
     function handleXhrError(xhr, errorType, exceptionThrown) {
         var errorMsg;
         var errorTitle;
@@ -576,7 +593,7 @@
                 break;
             case 400:
                 errorTitle = "Reddit Error";
-                errorMsg = "Did you specify a subreddit?";
+                errorMsg = "Did you enter the name of an existing subreddit?";
                 break;
             default:
                 errorTitle = "Reddit Error";

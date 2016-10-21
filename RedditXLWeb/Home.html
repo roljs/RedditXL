@@ -93,12 +93,12 @@
                     <div class="panePadding">
                         <div class="ms-font-l" style="color:#227447;">Import Your Data</div>
 
-                        <p class="ms-font-m" style="color:#227447;" id="template-description"></p>
+                        <p class="ms-font-s-plus" style="color:#227447;" id="template-description">Specify a subreddit you have moderator permissions for and click Get Data.</p>
 
                         <br />
-                        <div class="ms-TextField">
+                        <div class="ms-TextField" >
                             <label class="ms-Label">Subreddit</label>
-                            <input id="subReddit" class="ms-TextField-field" type="text" placeholder="Enter the name of a subreddit">
+                            <div style="width:20px; display:table-cell; padding:5px;" >/r/</div><div style="display:table-cell; width:100%"><input id="subReddit" class="ms-TextField-field" type="text" placeholder="Enter the name of the subreddit" style="min-width:160px;padding-left:5px;" /></div>
                         </div>
 
                         <div class="ms-Dropdown" tabindex="0" style="display:none">
@@ -168,26 +168,30 @@
                             <span class="ms-Button-label" id="button-text">Get Data</span>
                             <span class="ms-Button-description" id="button-desc">Imports data from Reddit</span>
                         </button>
+                 
+                        <div style="left:0px; height:40px; width:100%;">
+                            <!--Do not remove, this is a filler to make sure scrollbars allow button to show up above status footer -->
+                        </div>
+                        <div style="position:fixed; bottom:0px; left:0px; padding:5px 20px; width:100%; background-color:white">
+                            <label class="ms-Label ms-fontSize-sPlus" id="status">Ready</label>
+                        </div>
 
                     </div> <!--Padding Div -->
-                    <div style="position:absolute; bottom:15px; left:20px">
-                        <label class="ms-Label ms-fontSize-sPlus" id="status">Ready</label>
-                    </div>
                 </div>
                 <div class="ms-Pivot-content" data-content="about">
                     <div class="panePadding">
                         <div class="ms-font-l" style="color:#227447;">Flair Analysis for Reddit</div>
                         <b>Version:</b>  1.0
                         <br />
-                        <b>Created by:</b>  <a href="https://www.linkedin.com/in/rolando-jimenez-6b1a812?trk=hp-identity-name">Rolando Jimenez</a> in collaboration with <i>Ariel Zlatkovski</i>
+                        <b>Created by:</b>  <a target="_blank" href="https://www.linkedin.com/in/rolando-jimenez-6b1a812?trk=hp-identity-name">Rolando Jimenez</a> in collaboration with <i>Ariel Zlatkovski</i>
                         <br />
                         <br />
                         We hope you find this add-in useful. It was originally created to help Reddit moderators easily pull flair data from their subreddits into Excel. We are looking to expand its capabilities so if you have ideas for new features that will help you, please let us know by using the <b>Feedback</b> button below.
                         <br />
                         <br />
                         <b>Security and Privacy</b><br />
-                        We are aware that security and privacy are important and take them seriously. We rely on Reddit's implementation of <a href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to handle login and authorization as well as <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">SSL</a> for data transmissions, so we never get access to your login credentials or your data. Once you authorize the add-in, it will access Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond your Excel workbook.
-                        If you want to learn more about how this add-in uses your data please see our <a href="http://roljs.azurewebsites.net/office-add-ins/bubbles-privacy-statement/">privacy policy</a>.
+                        We are aware that security and privacy are important and take them seriously. We rely on Reddit's implementation of <a target="_blank" href="https://en.wikipedia.org/wiki/OAuth">OAuth 2.0</a> to handle login and authorization as well as <a target="_blank" href="https://en.wikipedia.org/wiki/Transport_Layer_Security">SSL</a> for data transmissions, so we never get access to your login credentials or your data. Once you authorize the add-in, it will access Reddit on your behalf and won't send, modify or share information obtained from Reddit beyond your Excel workbook.
+                        If you want to learn more about how this add-in uses your data please see our <a target="_blank" href="http://roljs.azurewebsites.net/office-add-ins/bubbles-privacy-statement/">privacy policy</a>.
                         <br/><br/>
                         <button class="ms-Button ms-Button--command" style="background-color:#227447; border-color:#227447" id="showWelcome">
                             <span class="ms-Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
